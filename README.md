@@ -8,3 +8,10 @@ This was submitted to the ElectroDatos challenge, offered by Gradiant. It revolv
 - [ ] Analyze provided data and display it
 - [ ] Compare data with public APIs
 - [ ] Add comparatives between data
+
+#### Execution
+Python version:
+3.10.12
+
+Required libraries:
+- 
