@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form method="post">
+        <label for="PIN">PIN</label>
+        <br>
+        <input type="password" name="PIN"
+               placeholder="Enter your PIN"
+               value="{{ request.form['PIN'] }}"></input>
+        <br>
+
+        <label for="content">Teu nome</label>
+        <br>
+        <textarea name="content"
+                  placeholder="Message content"
+                  rows="15"
+                  cols="60"
+                  >{{ request.form['name'] }}</textarea>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}
