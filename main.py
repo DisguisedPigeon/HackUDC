@@ -1,18 +1,21 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 from parser import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
-import requests
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
-from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import api_data
 
 fig = None
 plot1 = None
 canvas = None
+
+scroll_y = None
+frame = None
+table = None
 
 def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
@@ -30,20 +33,12 @@ def display_tabla_md(texto: tk.Text) -> None:
             # Manejo de errores si no se puede abrir el archivo
             print("Error al abrir el archivo:", e)
 
-def display_otro(texto: tk.Text):
-    texto.delete('1.0', tk.END)
-    texto.insert(tk.END, "gulpon")
-
-
 def abrir_seleccionador(widgets):
     display_tabla_md(widgets["tabla_md"])
-    display_otro(widgets["otro"])
     
-
 def plot_graph(pcb):
-
     global fig, plot1, canvas
-       
+
     if canvas is not None:
         canvas.get_tk_widget().destroy()
     
@@ -61,29 +56,62 @@ def plot_graph(pcb):
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
     canvas.draw() 
     canvas.get_tk_widget().pack()
+def plot_data(data):   
+    global frame,table,scroll_y
+    
+    frame = tk.Frame(frame_izquierda)
+    frame.pack(fill=tk.BOTH, expand=True)
 
+    table = ttk.Treeview(frame, columns=("Hora", "PCB"), show="headings")
+    table.heading("Hora", text="Hora")
+    table.heading("PCB", text="PCB")
 
-def get_power_graph(fecha):
+    for hora, pcb in data:
+        table.insert("", "end", values=(hora, pcb))
+
+    scroll_y = tk.Scrollbar(frame, orient="vertical", command=table.yview)
+    table.configure(yscrollcommand=scroll_y.set)
+
+    table.pack(side="left", fill="both", expand=True)
+    scroll_y.pack(side="right", fill="y")
+    
+def get_power(fecha, graph):
     array_precios = np.zeros(24)
 
     data = api_data.get_power_kWh_by_hour(fecha)
+    global frame,table,scroll_y,fig, plot1, canvas
 
-    if data == None:
+    if frame is not None:
+        frame.destroy()
+    if table is not None:
+        table.destroy()
+    if scroll_y is not None: 
+        scroll_y.destroy()
+    if canvas is not None:
+        canvas.get_tk_widget().destroy()
+
+    data = api_data.get_power_kWh_by_hour(fecha)
+    if data is None or data.empty:
         print("Error al obtener los datos")
         return
 
-    for i, key in enumerate(data):
-        hora = key.hour
-        pcb = data[key]
+    hora = data['Hora']
+    pcb = data['PCB']
 
-        array_precios[i] = pcb
-        # respuesta = str(key.day) + "/" + str(key.month) + "/" + str(key.year) + " " + str(hora) + ":00" + ": " + str(pcb) + "\n"
-    plot_graph(array_precios)
+    respuesta = []
+    respuesta.append((hora,pcb))
 
+    if graph:
+        plot_graph(data["PCB"])
+    else:
+        plot_data(respuesta)
 
-def grad_date():
-    date.config(text = "El día: " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
-    get_power_graph(cal.get_date())
+def grad_graph():
+    date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
+    get_power(cal.get_date(),True)
+def grad_data():
+    date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
+    get_power(cal.get_date(),False)
 
 # Configuración de la ventana principal
     
@@ -91,7 +119,7 @@ def grad_date():
 
 ventana = tk.Tk()
 ventana.title("Ana Rosa Quintana")
-ventana.geometry("1800x1000")  # Tamaño de la ventana (ancho x alto)
+ventana.geometry("1800x1000")
 
 # Crear un frame principal
 frame_principal = tk.Frame(ventana)
@@ -120,7 +148,6 @@ titulo.pack(pady=20)
 #etiqueta.pack(pady=10)
 
 
-
 # Add Calendar
 cal = Calendar(frame_izquierda, selectmode = 'day',
                year = 2024, month = 2,
@@ -132,12 +159,11 @@ button_frame = tk.Frame(frame_izquierda)
 button_frame.pack(side=tk.TOP)
 
 # Add Buttons
-button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_date)
+button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_data)
 button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_date)
+button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_graph)
 button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
-button_frame.pack(side=tk.TOP)
 
 date = tk.Label(frame_izquierda, text = "")
 date.pack(pady = 20)
@@ -155,7 +181,6 @@ frame_bot_derecha = tk.Frame(frame_derecha)
 
 # Texto mostrando archivo
 widgets["tabla_md"] = tk.Text(frame_bot_derecha, width=120, height=80)
-widgets["otro"] = tk.Text(frame_bot_derecha, width=120, height=80)
 
 
 
