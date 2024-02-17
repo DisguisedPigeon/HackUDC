@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys 
 
-TEST_DIRECTORY = "./resources/electrodatos.csv"
+TEST_DIRECTORY = "./resources/consumptions.csv"
 
 
 def ploti_pie(data: str = TEST_DIRECTORY):
@@ -13,7 +13,13 @@ def ploti_pie(data: str = TEST_DIRECTORY):
         print("Exiting with code -1")
         sys.exit(-1)
     #Load data
-    df = pd.read_csv(data)
+    df = pd.read_csv(data, sep=";")
+    #Create datetime column
+    df['Fecha'] = df['Fecha'].apply(lambda x: pd.Timestamp(x))
+    df['datetime'] = df['Fecha'].astype(str) + ' ' + df['Hora'].astype(str).replace("24", "00") + ':00:00'
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    #Replace in consumo "," for "."
+    df["Consumo_KWh"] = df['Consumo_KWh'].map(lambda x : float(x.replace(",", ".")))
     #Create column extracting the year
     df['year'] = pd.to_datetime(df['datetime']).dt.year
     #Create column 
@@ -31,7 +37,7 @@ def ploti_pie(data: str = TEST_DIRECTORY):
     #Extract same values from two arrays (only consume months)
     months_dict_filtered = np.intersect1d(list(a1),list(a2))
     #Consumes for month
-    values = list(df['Consumo'].groupby(df['month']).sum())
+    values = list(df['Consumo_KWh'].groupby(df['month']).sum())
     plt.pie(values, labels=[months_dict[key] for key in list(months_dict_filtered)], autopct=lambda p : '{:,.2f}'.format(p * sum(values)/100))
     plt.show()
 ploti_pie()
