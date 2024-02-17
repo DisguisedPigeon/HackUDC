@@ -139,21 +139,23 @@ titulo.pack(pady=20)
 
 
  
+
+ 
 # Add Calendar
 cal = Calendar(frame_izquierda, selectmode = 'day',
                year = 2024, month = 2,
                day = 16, date_pattern='y-mm-dd')
+cal.pack(side= tk.TOP,pady = 20)
 
-cal.pack(pady = 20)
-# Widget de texto para mostrar el contenido del archivo
-#texto_horas = tk.Text(frame_izquierda, width=20, height=20)
-#texto_horas.pack()
+button_frame = tk.Frame(frame_izquierda)
+button_frame.pack(side=tk.TOP)
 
+# Add Buttons
+button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_date)
+button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-# Add Button and Label
-tk.Button(frame_izquierda, text = "Get Date",
-       command = grad_date).pack(pady = 10)
-
+button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_date)
+button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
 date = tk.Label(frame_izquierda, text = "")
 date.pack(pady = 20)
