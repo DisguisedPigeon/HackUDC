@@ -1,6 +1,7 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
-from parser_1 import *
+#from parser_1 import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
@@ -8,10 +9,17 @@ import requests
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
 from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
+from tabulate import tabulate
 
 fig = None
 plot1 = None
 canvas = None
+
+scroll_y = None
+frame = None
+table = None
+
+
 
 def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
@@ -28,23 +36,14 @@ def display_tabla_md(texto: tk.Text) -> None:
         except Exception as e:
             # Manejo de errores si no se puede abrir el archivo
             print("Error al abrir el archivo:", e)
-
 def display_otro(texto: tk.Text):
     texto.delete('1.0', tk.END)
     texto.insert(tk.END, "gulpon")
-
-
 def abrir_seleccionador(widgets):
     display_tabla_md(widgets["tabla_md"])
     display_otro(widgets["otro"])
-    
-
 def plot_graph(pcb):
-
     global fig, plot1, canvas
-       
-    if canvas is not None:
-        canvas.get_tk_widget().destroy()
     
     fig = Figure(figsize=(5, 5), dpi=100)
     plot1 = fig.add_subplot(111)
@@ -60,18 +59,43 @@ def plot_graph(pcb):
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
     canvas.draw() 
     canvas.get_tk_widget().pack()
+def plot_data(data):   
+    global frame,table,scroll_y
     
+    frame = tk.Frame(frame_izquierda)
+    frame.pack(fill=tk.BOTH, expand=True)
 
+    table = ttk.Treeview(frame, columns=("Hora", "PCB"), show="headings")
+    table.heading("Hora", text="Hora")
+    table.heading("PCB", text="PCB")
 
-def get_power_graph(fecha):
-    # URL del endpoint proporcionado
+    for hora, pcb in data:
+        table.insert("", "end", values=(hora, pcb))
+
+    scroll_y = tk.Scrollbar(frame, orient="vertical", command=table.yview)
+    table.configure(yscrollcommand=scroll_y.set)
+
+    table.pack(side="left", fill="both", expand=True)
+    scroll_y.pack(side="right", fill="y")
+    
+def get_power(fecha,graph):
     url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
-    # Envía la solicitud GET al endpoint
     response = requests.get(url)
-
-    # Verifica si la solicitud fue exitosa (código de estado 200)
     array_precios = np.zeros(24)
+
+    global frame,table,scroll_y,fig, plot1, canvas
+
+    if frame is not None:
+        frame.destroy()
+    if table is not None:
+        table.destroy()
+    if scroll_y is not None: 
+        scroll_y.destroy()
+    if canvas is not None:
+        canvas.get_tk_widget().destroy()
+
     i = 0
+    respuesta = []
     if response.status_code == 200:
         # Si la solicitud fue exitosa, carga los datos JSON
         data = response.json()
@@ -85,7 +109,7 @@ def get_power_graph(fecha):
             #cof2td = line['COF2TD']
             # y así sucesivamente para los demás campos
             array_precios[i] = float(pcb.replace(",","."))
-            respuesta = hora + ": " + pcb + "\n"
+            respuesta.append((hora,pcb))
             #texto_horas.insert(tk.END, respuesta)
             #media_horas[hora] += float(pcb.replace(",","."))
             i = i + 1
@@ -95,13 +119,18 @@ def get_power_graph(fecha):
     else:
         # Si la solicitud falló, imprime el mensaje de error
         print("Error al obtener los datos:", response.status_code)
-    
-    plot_graph(array_precios)
+    if graph:
+        plot_graph(array_precios)
+    else:
+        plot_data(respuesta)
     
 
-def grad_date():
+def grad_graph():
     date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
-    get_power_graph(cal.get_date())
+    get_power(cal.get_date(),True)
+def grad_data():
+    date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
+    get_power(cal.get_date(),False)
 
 # Configuración de la ventana principal
     
@@ -109,7 +138,7 @@ def grad_date():
 
 ventana = tk.Tk()
 ventana.title("Ana Rosa Quintana")
-ventana.geometry("1800x1000")  # Tamaño de la ventana (ancho x alto)
+ventana.geometry("1800x1000")
 
 # Crear un frame principal
 frame_principal = tk.Frame(ventana)
@@ -151,10 +180,10 @@ button_frame = tk.Frame(frame_izquierda)
 button_frame.pack(side=tk.TOP)
 
 # Add Buttons
-button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_date)
+button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_data)
 button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_date)
+button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_graph)
 button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
 date = tk.Label(frame_izquierda, text = "")
