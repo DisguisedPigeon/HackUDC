@@ -42,10 +42,14 @@ def plot_graph(pcb):
     # adding the subplot 
     plot1 = fig.add_subplot(111)
 
+    # Agregar nombres a los ejes
+    plot1.set_xlabel('Hora del Día')  # Nombre del eje X
+    plot1.set_ylabel('Precio')  # Nombre del eje Y
+
     # plotting the graph
     plot1.bar([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],pcb)
 
-
+ 
     # creating the Tkinter canvas 
     # containing the Matplotlib figure 
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
@@ -99,7 +103,7 @@ def get_power(fecha):
     
 
 def grad_date():
-    date.config(text = "El día: " + cal.get_date() + "el precio de la electricidad en kWh era el siguiente: ")
+    date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
     get_power(cal.get_date())
 
 # Configuración de la ventana principal
@@ -108,7 +112,7 @@ def grad_date():
 
 ventana = tk.Tk()
 ventana.title("Ana Rosa Quintana")
-ventana.geometry("600x300")  # Tamaño de la ventana (ancho x alto)
+ventana.geometry("1800x1000")  # Tamaño de la ventana (ancho x alto)
 
 # Crear un frame principal
 frame_principal = tk.Frame(ventana)
@@ -150,7 +154,7 @@ texto_horas.pack()
 
 # Add Button and Label
 tk.Button(frame_izquierda, text = "Get Date",
-       command = grad_date).pack(pady = 20)
+       command = grad_date).pack(pady = 10)
 
 
 date = tk.Label(frame_izquierda, text = "")
