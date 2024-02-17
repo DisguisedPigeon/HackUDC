@@ -32,3 +32,18 @@ def print_data(data: str = TEST_DIRECTORY) -> None:
         val = "Failed to parse"
     print(val)
 
+def ret_md(data: str = TEST_DIRECTORY) -> str:
+    val = pd.read_csv(data, sep=";").to_markdown() 
+    if val == None:
+        val = "Failed to parse"
+    return val
+
+def main():
+    print(parse_data(TEST_DIRECTORY))
+    print("\n","="*80, "\n")
+    print(ret_md(TEST_DIRECTORY))
+    print("\n","="*80, "\n")
+    print_data(TEST_DIRECTORY)
+    
+if __name__ == '__main__':
+    main()
