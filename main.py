@@ -8,6 +8,7 @@ import requests
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
 from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
+import api_data
 
 def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
