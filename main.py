@@ -10,6 +10,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationTool
 from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
 import api_data
 
+fig = None
+plot1 = None
+canvas = None
+
 def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
     # Verificar si se seleccionó un archivo
@@ -37,57 +41,49 @@ def abrir_seleccionador(widgets):
     
 
 def plot_graph(pcb):
-    # the figure that will contain the plot 
-    fig = Figure(figsize = (5, 5), dpi = 100)
 
-    # adding the subplot 
+    global fig, plot1, canvas
+       
+    if canvas is not None:
+        canvas.get_tk_widget().destroy()
+    
+    fig = Figure(figsize=(5, 5), dpi=100)
     plot1 = fig.add_subplot(111)
 
+    # Agregar nombres a los ejes
+    plot1.set_xlabel('Hora del Día')
+    plot1.set_ylabel('Precio')
+
     # plotting the graph
-    plot1.bar([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],pcb)
-
-
-    # creating the Tkinter canvas 
-    # containing the Matplotlib figure 
+    plot1.clear()
+    plot1.bar(range(len(pcb)), pcb)
+    
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
     canvas.draw() 
-
-    # placing the canvas on the Tkinter window 
-    canvas.get_tk_widget().pack() 
-
-    # creating the Matplotlib toolbar 
-    toolbar = NavigationToolbar2Tk(canvas, frame_izquierda) 
-    toolbar.update()    
-
-    # placing the toolbar on the Tkinter window 
     canvas.get_tk_widget().pack()
 
 
-def get_power(fecha):
+def get_power_graph(fecha):
     array_precios = np.zeros(24)
 
     data = api_data.get_power_kWh_by_hour(fecha)
 
     if data == None:
-        # Si la solicitud falló, imprime el mensaje de error
         print("Error al obtener los datos")
         return
 
-    # Si la solicitud fue exitosa, carga los datos JSON
     for i, key in enumerate(data):
-        # Accede a los valores específicos dentro del objeto JSON
         hora = key.hour
         pcb = data[key]
 
         array_precios[i] = pcb
-        respuesta = str(key.day) + "/" + str(key.month) + "/" + str(key.year) + " " + str(hora) + ":00" + ": " + str(pcb) + "\n"
-        texto_horas.insert(tk.END, respuesta)
+        # respuesta = str(key.day) + "/" + str(key.month) + "/" + str(key.year) + " " + str(hora) + ":00" + ": " + str(pcb) + "\n"
     plot_graph(array_precios)
-    
+
 
 def grad_date():
-    date.config(text = "El día: " + cal.get_date() + "el precio de la electricidad en kWh era el siguiente: ")
-    get_power(cal.get_date())
+    date.config(text = "El día: " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
+    get_power_graph(cal.get_date())
 
 # Configuración de la ventana principal
     
@@ -95,7 +91,7 @@ def grad_date():
 
 ventana = tk.Tk()
 ventana.title("Ana Rosa Quintana")
-ventana.geometry("600x300")  # Tamaño de la ventana (ancho x alto)
+ventana.geometry("1800x1000")  # Tamaño de la ventana (ancho x alto)
 
 # Crear un frame principal
 frame_principal = tk.Frame(ventana)
@@ -124,21 +120,24 @@ titulo.pack(pady=20)
 #etiqueta.pack(pady=10)
 
 
- 
+
 # Add Calendar
 cal = Calendar(frame_izquierda, selectmode = 'day',
                year = 2024, month = 2,
                day = 16, date_pattern='y-mm-dd')
 
-cal.pack(pady = 20)
-# Widget de texto para mostrar el contenido del archivo
-texto_horas = tk.Text(frame_izquierda, width=20, height=20)
-texto_horas.pack()
+cal.pack(side= tk.TOP,pady = 20)
 
-# Add Button and Label
-tk.Button(frame_izquierda, text = "Get Date",
-       command = grad_date).pack(pady = 20)
+button_frame = tk.Frame(frame_izquierda)
+button_frame.pack(side=tk.TOP)
 
+# Add Buttons
+button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_date)
+button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
+
+button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_date)
+button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
+button_frame.pack(side=tk.TOP)
 
 date = tk.Label(frame_izquierda, text = "")
 date.pack(pady = 20)
