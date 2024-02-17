@@ -7,9 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
 import requests
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
-from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
-from tabulate import tabulate
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 fig = None
 plot1 = None
@@ -109,7 +107,6 @@ def get_power(fecha,graph):
         data = data["PVPC"]
         for line in data:
             # Accede a los valores específicos dentro del objeto JSON
-            dia = line['Dia']
             hora = line['Hora']
             pcb = line['PCB']
             #cym = line['CYM']
