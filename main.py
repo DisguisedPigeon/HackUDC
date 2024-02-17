@@ -64,38 +64,24 @@ def plot_graph(pcb):
 
 
 def get_power(fecha):
-    # URL del endpoint proporcionado
-    url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
-    # Envía la solicitud GET al endpoint
-    response = requests.get(url)
-
-    # Verifica si la solicitud fue exitosa (código de estado 200)
     array_precios = np.zeros(24)
-    i = 0
-    if response.status_code == 200:
-        # Si la solicitud fue exitosa, carga los datos JSON
-        data = response.json()
-        data = data["PVPC"]
-        for line in data:
-            # Accede a los valores específicos dentro del objeto JSON
-            dia = line['Dia']
-            hora = line['Hora']
-            pcb = line['PCB']
-            #cym = line['CYM']
-            #cof2td = line['COF2TD']
-            # y así sucesivamente para los demás campos
-            array_precios[i] = float(pcb.replace(",","."))
-            respuesta = hora + ": " + pcb + "\n"
-            texto_horas.insert(tk.END, respuesta)
-            #media_horas[hora] += float(pcb.replace(",","."))
-            i = i + 1
-            #print("Precio CYM:", cym)
-            #print("Cof2td:", cof2td)
-            # y así sucesivamente para los demás campos
-    else:
+
+    data = api_data.get_power_kWh_by_hour(fecha)
+
+    if data == None:
         # Si la solicitud falló, imprime el mensaje de error
-        print("Error al obtener los datos:", response.status_code)
-    
+        print("Error al obtener los datos")
+        return
+
+    # Si la solicitud fue exitosa, carga los datos JSON
+    for i, key in enumerate(data):
+        # Accede a los valores específicos dentro del objeto JSON
+        hora = key.hour
+        pcb = data[key]
+
+        array_precios[i] = pcb
+        respuesta = str(key.day) + "/" + str(key.month) + "/" + str(key.year) + " " + str(hora) + ":00" + ": " + str(pcb) + "\n"
+        texto_horas.insert(tk.END, respuesta)
     plot_graph(array_precios)
     
 
