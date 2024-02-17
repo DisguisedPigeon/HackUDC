@@ -39,8 +39,10 @@ def ret_md(data: str = TEST_DIRECTORY) -> str:
     return val
 
 def main():
-    print("AAAA")
-    #parse_data(TEST_DIRECTORY)
+    print(parse_data(TEST_DIRECTORY))
+    print("\n","="*80, "\n")
+    print(ret_md(TEST_DIRECTORY))
+    print("\n","="*80, "\n")
     print_data(TEST_DIRECTORY)
     
 if __name__ == '__main__':
