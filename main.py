@@ -4,10 +4,8 @@ from parser import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
-import requests
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
-from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import api_data
 
 fig = None

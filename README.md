@@ -14,8 +14,7 @@ Python version:
 3.10.12
 
 Required libraries:
-- sudo apt-get install python3-tk
-- pip install tkinter
-- pip install tabulate
-- pip install tkcalendar
-- pip install Pillow 
+- tkinter
+- tabulate
+- tkcalendar
+- Pillow 
