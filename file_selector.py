@@ -43,7 +43,7 @@ def abrir_seleccionador(widgets):
 def plot_graph(pcb):
     global fig, plot1, canvas
     
-    fig = Figure(figsize=(5, 5), dpi=100)
+    fig = Figure(figsize=(6.5, 5), dpi=100)
     plot1 = fig.add_subplot(111)
 
     # Agregar nombres a los ejes
@@ -51,9 +51,16 @@ def plot_graph(pcb):
     plot1.set_ylabel('Precio')
 
     # plotting the graph
-    plot1.clear()
-    plot1.bar(range(len(pcb)), pcb)
+    x_values = range(24)
     
+    # plotting the graph
+    plot1.clear()
+    plot1.bar(x_values, pcb)
+    
+    # Establecer las etiquetas del eje x para que muestren todos los valores de 0 a 23
+    plot1.set_xticks(x_values)
+
+
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
     canvas.draw() 
     canvas.get_tk_widget().pack()
@@ -154,10 +161,10 @@ frame_derecha.pack(side="right", fill="both", expand=True)
 ventana.configure(bg="#f0f0f0")
 
 frame_top_derecha = tk.Frame(frame_derecha, bg="lightgreen") 
-
 # Título para la ventana
-titulo = tk.Label(frame_top_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg="#a9b1d9")
-titulo.pack(pady=20)
+titulo_d = tk.Label(frame_top_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg="#a9b1d9")
+titulo_d.pack(pady=20)
+
 
 # Etiqueta para mostrar el archivo seleccionado
 #etiqueta = tk.Label(frame_top_derecha, text="Indica tu consumo de luz en kW y la hora", font=("Helvetica", 24), bg="#f0f0f0")
@@ -183,7 +190,7 @@ button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
 button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_graph)
 button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-date = tk.Label(frame_izquierda, text = "")
+date = tk.Label(frame_izquierda, text = "Compare con los precios de mercado")
 date.pack(pady = 20)
 
 # Widgets de display de data
