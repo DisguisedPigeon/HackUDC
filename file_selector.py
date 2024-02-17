@@ -5,40 +5,40 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
 import requests
-import json
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
-NavigationToolbar2Tk) 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
+from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
 
-def abrir_seleccionador():
+def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
-    
     # Verificar si se seleccionó un archivo
     if archivo:
         # Si se seleccionó un archivo, intenta abrirlo
         try:
-            with open(archivo, 'r') as f:
-                contenido = print_data(archivo)
-                #contenido = f.read()
-                # Aquí puedes hacer lo que desees con el contenido del archivo
-                print("Contenido del archivo:")
-                # Limpiar el widget de texto
-                texto.delete('1.0', tk.END)
-                # Insertar el contenido del archivo en el widget de texto
-                texto.insert(tk.END, contenido)
-                #print(contenido)
+            contenido = ret_md(archivo)
+            # Limpiar el widget de texto
+            texto.delete('1.0', tk.END)
+            # Insertar el contenido del archivo en el widget de texto
+            texto.insert(tk.END, contenido)
+            #print(contenido)
         except Exception as e:
             # Manejo de errores si no se puede abrir el archivo
             print("Error al abrir el archivo:", e)
+
+def display_otro(texto: tk.Text):
+    texto.delete('1.0', tk.END)
+    texto.insert(tk.END, "gulpon")
+
+
+def abrir_seleccionador(widgets):
+    display_tabla_md(widgets["tabla_md"])
+    display_otro(widgets["tabla_md"])
+    
 
 def plot_graph(pcb):
     # the figure that will contain the plot 
     fig = Figure(figsize = (5, 5), dpi = 100)
 
-    # list of squares
-    y = [i**2 for i in range(101)]
     # adding the subplot 
     plot1 = fig.add_subplot(111)
 
@@ -61,8 +61,8 @@ def plot_graph(pcb):
     # placing the toolbar on the Tkinter window 
     canvas.get_tk_widget().pack()
 
+
 def get_power(fecha):
-    
     # URL del endpoint proporcionado
     url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
     # Envía la solicitud GET al endpoint
@@ -83,10 +83,6 @@ def get_power(fecha):
             #cym = line['CYM']
             #cof2td = line['COF2TD']
             # y así sucesivamente para los demás campos
-            # Imprime algunos de los valores obtenidos
-            print("\nInformación específica:")
-            print("Hora:", hora)
-            print("Precio PCB:", pcb)
             array_precios[i] = float(pcb.replace(",","."))
             respuesta = hora + ": " + pcb + "\n"
             texto_horas.insert(tk.END, respuesta)
@@ -130,12 +126,14 @@ frame_derecha.pack(side="right", fill="both", expand=True)
 # Color de fondo para la ventana
 ventana.configure(bg="#f0f0f0")
 
+frame_top_derecha = tk.Frame(frame_derecha, bg="lightgreen") 
+
 # Título para la ventana
-titulo = tk.Label(frame_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg="#f0f0f0")
+titulo = tk.Label(frame_top_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg="#a9b1d9")
 titulo.pack(pady=20)
 
 # Etiqueta para mostrar el archivo seleccionado
-#etiqueta = tk.Label(frame_derecha, text="Indica tu consumo de luz en kW y la hora", font=("Helvetica", 24), bg="#f0f0f0")
+#etiqueta = tk.Label(frame_top_derecha, text="Indica tu consumo de luz en kW y la hora", font=("Helvetica", 24), bg="#f0f0f0")
 #etiqueta.pack(pady=10)
 
 
@@ -143,7 +141,7 @@ titulo.pack(pady=20)
 # Add Calendar
 cal = Calendar(frame_izquierda, selectmode = 'day',
                year = 2024, month = 2,
-               day = 19, date_pattern='y-mm-dd')
+               day = 16, date_pattern='y-mm-dd')
 
 cal.pack(pady = 20)
 # Widget de texto para mostrar el contenido del archivo
@@ -158,14 +156,37 @@ tk.Button(frame_izquierda, text = "Get Date",
 date = tk.Label(frame_izquierda, text = "")
 date.pack(pady = 20)
 
+# Widgets de display de data
+widgets: dict[str, tk.Widget] = {}
 
 # Botón para abrir el seleccionador de archivos
-boton = tk.Button(frame_derecha, text="Seleccionar Archivo", command=abrir_seleccionador, width=40, height=5)
+boton = tk.Button(frame_top_derecha, text="Seleccionar Archivo", command=lambda: abrir_seleccionador(widgets), width=40, height=5)
 boton.pack(pady=1)
 
-# Widget de texto para mostrar el contenido del archivo
-texto = tk.Text(frame_derecha, width=120, height=80)
-texto.pack()
+frame_top_derecha.pack()
+
+frame_bot_derecha = tk.Frame(frame_derecha)
+
+# Texto mostrando archivo
+widgets["tabla_md"] = tk.Text(frame_bot_derecha, width=120, height=80)
+widgets["otro"] = tk.Text(frame_bot_derecha, width=120, height=80)
+
+
+
+for i, key in enumerate(widgets):
+    if i%2 == 0:
+        widgets[key].grid(row= i // 2, column=0)
+    else:
+        widgets[key].grid(row= i // 2, column=1)
+
+
+frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
+
+
+
+def update():       # Para gestionar Ctrl-c
+    ventana.after(50, update)
+ventana.after(50, update)
 
 ventana.mainloop()
 
