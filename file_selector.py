@@ -9,6 +9,10 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
 from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
 
+fig = None
+plot1 = None
+canvas = None
+
 def display_tabla_md(texto: tk.Text) -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
     # Verificar si se seleccionó un archivo
@@ -32,41 +36,34 @@ def display_otro(texto: tk.Text):
 
 def abrir_seleccionador(widgets):
     display_tabla_md(widgets["tabla_md"])
-    display_otro(widgets["tabla_md"])
+    display_otro(widgets["otro"])
     
 
 def plot_graph(pcb):
-    # the figure that will contain the plot 
-    fig = Figure(figsize = (5, 5), dpi = 100)
 
-    # adding the subplot 
+    global fig, plot1, canvas
+       
+    if canvas is not None:
+        canvas.get_tk_widget().destroy()
+    
+    fig = Figure(figsize=(5, 5), dpi=100)
     plot1 = fig.add_subplot(111)
 
     # Agregar nombres a los ejes
-    plot1.set_xlabel('Hora del Día')  # Nombre del eje X
-    plot1.set_ylabel('Precio')  # Nombre del eje Y
+    plot1.set_xlabel('Hora del Día')
+    plot1.set_ylabel('Precio')
 
     # plotting the graph
-    plot1.bar([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],pcb)
-
- 
-    # creating the Tkinter canvas 
-    # containing the Matplotlib figure 
+    plot1.clear()
+    plot1.bar(range(len(pcb)), pcb)
+    
     canvas = FigureCanvasTkAgg(fig, master = frame_izquierda) 
     canvas.draw() 
-
-    # placing the canvas on the Tkinter window 
-    canvas.get_tk_widget().pack() 
-
-    # creating the Matplotlib toolbar 
-    toolbar = NavigationToolbar2Tk(canvas, frame_izquierda) 
-    toolbar.update()    
-
-    # placing the toolbar on the Tkinter window 
     canvas.get_tk_widget().pack()
+    
 
 
-def get_power(fecha):
+def get_power_graph(fecha):
     # URL del endpoint proporcionado
     url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
     # Envía la solicitud GET al endpoint
@@ -89,7 +86,7 @@ def get_power(fecha):
             # y así sucesivamente para los demás campos
             array_precios[i] = float(pcb.replace(",","."))
             respuesta = hora + ": " + pcb + "\n"
-            texto_horas.insert(tk.END, respuesta)
+            #texto_horas.insert(tk.END, respuesta)
             #media_horas[hora] += float(pcb.replace(",","."))
             i = i + 1
             #print("Precio CYM:", cym)
@@ -104,7 +101,7 @@ def get_power(fecha):
 
 def grad_date():
     date.config(text = "El día:  " + cal.get_date() + " el precio de la electricidad en kWh era el siguiente: ")
-    get_power(cal.get_date())
+    get_power_graph(cal.get_date())
 
 # Configuración de la ventana principal
     
@@ -149,8 +146,9 @@ cal = Calendar(frame_izquierda, selectmode = 'day',
 
 cal.pack(pady = 20)
 # Widget de texto para mostrar el contenido del archivo
-texto_horas = tk.Text(frame_izquierda, width=20, height=20)
-texto_horas.pack()
+#texto_horas = tk.Text(frame_izquierda, width=20, height=20)
+#texto_horas.pack()
+
 
 # Add Button and Label
 tk.Button(frame_izquierda, text = "Get Date",
