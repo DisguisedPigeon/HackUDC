@@ -48,7 +48,6 @@ def leer_csv(archivo):
         df = pd.read_csv(archivo,sep=';')
     else:
         df = pd.read_csv(archivo)
-
     return df
 
 def mayor_consumo(df):

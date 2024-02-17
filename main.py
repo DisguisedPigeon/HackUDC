@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from parser import *
+from parser import get_KWh
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
@@ -9,6 +10,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import api_data
 import sys
+import analyze_data as AD
 
 TEST_DIRECTORY = "./resources/consumptions.csv"
 
@@ -20,8 +22,15 @@ canvasPie = None
 scroll_y = None
 frame = None
 frame2 = None
+frame3 = None
 table = None
 widgets = {}
+
+color_texto = '#e0def4'
+color_principal = '#9ccfd8'
+color_enfasis = '#31748f'
+color_secundario = '#c4a7e7'
+color_terciario = '#ebbcba'
 
 def ploti_pie(yiar, data: str = TEST_DIRECTORY):
     global canvasPie,frame2
@@ -34,7 +43,7 @@ def ploti_pie(yiar, data: str = TEST_DIRECTORY):
         print("Exiting with code -1")
         sys.exit(-1)
     #Load data
-    df = pd.read_csv(data, sep=";")
+    df = AD.leer_csv(data)
     #Create datetime column
     df['Fecha'] = df['Fecha'].apply(lambda x: pd.Timestamp(x))
     df['datetime'] = df['Fecha'].astype(str) + ' ' + df['Hora'].astype(str).replace("24", "00") + ':00:00'
@@ -88,22 +97,54 @@ def display_tabla_md() -> None:
     if archivo:
         # Si se seleccionó un archivo, intenta abrirlo
         try:
-            widgets["tabla_md"] = tk.Text(frame_bot_derecha, height=15)
+            contenido2 = get_KWh(archivo)
+
+            eje_y = np.zeros(len(contenido2))
+
+            for entry in contenido2:
+                eje_y[entry] = contenido2[entry]
+
+            fig = Figure(figsize=(5, 5), dpi=100)
+            plot2 = fig.add_subplot(111)
+
+            # plotting the graph
+            plot2.clear()
+            plot2.bar(range(len(contenido2)), eje_y)
+
+            # Agregar nombres a los ejes
+            plot2.set_title("Consumo (kWh) en el día")
+            plot2.set_xlabel('Hora del Día')
+            plot2.set_ylabel('Consumo')
+            frame3 = tk.Frame(frame_derecha)
+            frame3.pack(side="right", fill="both", expand=True)
+
+            canvas = FigureCanvasTkAgg(fig, master = frame3) 
+            canvas.draw() 
+            canvas.get_tk_widget().pack()
+            
+            widgets["tabla_md"] = tk.Text(frame_bot_derecha, font=("Helvetica", 8))
+            widgets["tabla_md"].pack(side="left", fill="both", expand=True)
             contenido = ret_md(archivo)
             # Limpiar el widget de texto
             widgets["tabla_md"].delete('1.0', tk.END)
             # Insertar el contenido del archivo en el widget de texto
             widgets["tabla_md"].insert(tk.END, contenido)
+            
             #Seleccionar el año:
             widgets["input_label"] = tk.Label(frame_bot_derecha, text = "Selecciona el año")
+            widgets["input_label"].pack(side="bottom", fill="both", expand=True)
+
             widgets["input_year"] = tk.Text(frame_bot_derecha, height=1)
+            widgets["input_year"].pack(side="bottom", fill="both", expand=True)
+            
             widgets["btn"] = tk.Button(frame_bot_derecha, 
                         text = "Search",  
                         command = lambda: ploted(archivo)) 
+            widgets["btn"].pack(side="bottom", fill="both", expand=True)
             #TODO: ponerle título a la gráfica
-            for i, key in enumerate(widgets):
-                widgets[key].grid(row= i, column=0)
-            frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
+            #for i, key in enumerate(widgets):
+                #widgets[key].grid(row= i, column=0)
+            #frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
 
         except Exception as e:
             # Manejo de errores si no se puede abrir el archivo
@@ -139,7 +180,7 @@ def plot_graph(pcb):
     canvas.draw() 
     canvas.get_tk_widget().pack()
 def plot_data(data):   
-    global table,scroll_y
+    global table,scroll_y,frame
     
     frame = tk.Frame(frame_izquierda)
     frame.pack(fill=tk.BOTH, expand=True)
@@ -204,65 +245,88 @@ ventana.title("Ana Rosa Quintana")
 ventana.geometry("1800x1000")
 
 # Crear un frame principal
-frame_principal = tk.Frame(ventana)
+frame_principal = tk.Frame(ventana,bg='white')
 frame_principal.pack(fill="both", expand=True)
 
 # Crear un frame para el texto a la izquierda
-frame_izquierda = tk.Frame(frame_principal, bg="lightblue")#, width=200)
+frame_izquierda = tk.Frame(frame_principal, bg=color_principal)#, width=200)
 frame_izquierda.pack(side="left", fill="y")
 
 
 # Crear un frame para otro widget a la derecha
-frame_derecha = tk.Frame(frame_principal, bg="lightgreen")
+frame_derecha = tk.Frame(frame_principal, bg=color_secundario)
 frame_derecha.pack(side="right", fill="both", expand=True)
 
 
 #frame2.grid_propagate(0)
 
 # Color de fondo para la ventana
-ventana.configure(bg="#f0f0f0")
+ventana.configure(bg=color_principal)
 
-frame_top_derecha = tk.Frame(frame_derecha, bg="lightgreen") 
+frame_top_derecha = tk.Frame(frame_derecha, bg=color_secundario) 
 
 # Título para la ventana
-titulo_d = tk.Label(frame_top_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg="#a9b1d9")
+titulo_d = tk.Label(frame_top_derecha, text="Seleccione su factura", font=("Helvetica", 32), bg=color_secundario)
 titulo_d.pack(pady=20)
 
 # Etiqueta para mostrar el archivo seleccionado
 #etiqueta = tk.Label(frame_top_derecha, text="Indica tu consumo de luz en kW y la hora", font=("Helvetica", 24), bg="#f0f0f0")
 #etiqueta.pack(pady=10)
 
+style = ttk.Style(ventana)
 
 # Add Calendar
 cal = Calendar(frame_izquierda, selectmode = 'day',
                year = 2024, month = 2,
-               day = 16, date_pattern='y-mm-dd')
+               day = 16, date_pattern='y-mm-dd', font=("Arial", 18, 'bold'), cursor="hand2",background='#191724', disabledbackground='#191724', bordercolor='#191724', 
+               headersbackground='#191724', normalbackground='#191724', foreground=color_texto, 
+               normalforeground=color_texto, headersforeground=color_texto, selectbackground=color_terciario)
 
 cal.pack(side= tk.TOP,pady = 20)
 
-button_frame = tk.Frame(frame_izquierda)
+button_frame = tk.Frame(frame_izquierda,bg=color_principal)
 button_frame.pack(side=tk.TOP)
 
-# Add Buttons
-button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_data)
-button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_graph)
-button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
-date = tk.Label(frame_izquierda, text = "Compare con los precios de mercado")
+date = tk.Label(frame_izquierda, text = "Compare con los precios de mercado",bg=color_principal)
 date.pack(pady = 20)
 
 # Widgets de display de data
 widgets: dict[str, tk.Widget] = {}
 
 # Botón para abrir el seleccionador de archivos
-boton = tk.Button(frame_top_derecha, text="Seleccionar Archivo", command=lambda: abrir_seleccionador())#, width=40, height=5)
+
+style = ttk.Style()
+
+style.configure('TButton', font =
+           ('Arial', 20, 'bold'),
+                borderwidth = '0',background = 'white')
+
+style.configure('TButton2', font =
+           ('Arial', 20, 'bold'),
+                borderwidth = '2',background = 'white')
+
+style.map('TButton', foreground = [('active', '!disabled', 'black')],
+                 background = [('active', color_enfasis)])
+
+style.map('TButton2', foreground = [('active', '!disabled', 'black')],
+                 background = [('active', color_enfasis)])
+
+boton = ttk.Button(frame_top_derecha, text="Seleccionar Archivo", command=lambda: abrir_seleccionador(),style='W.TButton',cursor="hand2")#, width=40, height=5)
 boton.pack(pady=1)
 
 frame_top_derecha.pack()
 
-frame_bot_derecha = tk.Frame(frame_derecha)
+frame_bot_derecha = tk.Frame(frame_derecha, bg=color_secundario)
+frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
+
+# Add Buttons
+button_get_data = tk.Button(frame_izquierda, text="Get Data", command=grad_data,cursor="hand2")
+button_get_data.pack(in_=button_frame, side=tk.LEFT, pady=10)
+
+button_get_graph = tk.Button(frame_izquierda, text="Get Graph", command=grad_graph,cursor="hand2")
+button_get_graph.pack(in_=button_frame, side=tk.LEFT, pady=10)
 
 def update():       # Para gestionar Ctrl-c
     ventana.after(50, update)
