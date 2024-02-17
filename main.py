@@ -8,6 +8,10 @@ from tkcalendar import Calendar
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import api_data
+import plotipie as PP
+from PIL import Image, ImageTk
+import os
+
 
 fig = None
 plot1 = None
@@ -17,24 +21,38 @@ scroll_y = None
 frame = None
 table = None
 
-def display_tabla_md(texto: tk.Text) -> None:
+def display_tabla_md() -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
     # Verificar si se seleccionó un archivo
     if archivo:
         # Si se seleccionó un archivo, intenta abrirlo
         try:
+            widgets = {}
+            widgets["tabla_md"] = tk.Text(frame_bot_derecha)
             contenido = ret_md(archivo)
             # Limpiar el widget de texto
-            texto.delete('1.0', tk.END)
+            widgets["tabla_md"].delete('1.0', tk.END)
             # Insertar el contenido del archivo en el widget de texto
-            texto.insert(tk.END, contenido)
+            widgets["tabla_md"].insert(tk.END, contenido)
             #print(contenido)
+            if os.path.exists('ploti.png') == True:
+                os.remove('ploti.png')
+            #TODO: seleccionar el año
+            PP.ploti_pie("2023", archivo)
+            image = Image.open('ploti.png')
+            canvasPie = ImageTk.PhotoImage(image)
+            widgets["ploti_pie"] = tk.Label(frame_bot_derecha, image=canvasPie)
+            for i, key in enumerate(widgets):
+                widgets[key].grid(row= i, column=0)
+            frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
+            ventana.mainloop()
+
         except Exception as e:
             # Manejo de errores si no se puede abrir el archivo
             print("Error al abrir el archivo:", e)
 
-def abrir_seleccionador(widgets):
-    display_tabla_md(widgets["tabla_md"])
+def abrir_seleccionador():
+    display_tabla_md()
     
 def plot_graph(pcb):
     global fig, plot1, canvas
@@ -132,7 +150,7 @@ frame_principal = tk.Frame(ventana)
 frame_principal.pack(fill="both", expand=True)
 
 # Crear un frame para el texto a la izquierda
-frame_izquierda = tk.Frame(frame_principal, bg="lightblue", width=200)
+frame_izquierda = tk.Frame(frame_principal, bg="lightblue")#, width=200)
 frame_izquierda.pack(side="left", fill="y")
 
 
@@ -178,28 +196,12 @@ date.pack(pady = 20)
 widgets: dict[str, tk.Widget] = {}
 
 # Botón para abrir el seleccionador de archivos
-boton = tk.Button(frame_top_derecha, text="Seleccionar Archivo", command=lambda: abrir_seleccionador(widgets), width=40, height=5)
+boton = tk.Button(frame_top_derecha, text="Seleccionar Archivo", command=lambda: abrir_seleccionador())#, width=40, height=5)
 boton.pack(pady=1)
 
 frame_top_derecha.pack()
 
 frame_bot_derecha = tk.Frame(frame_derecha)
-
-# Texto mostrando archivo
-widgets["tabla_md"] = tk.Text(frame_bot_derecha, width=120, height=80)
-
-
-
-for i, key in enumerate(widgets):
-    if i%2 == 0:
-        widgets[key].grid(row= i // 2, column=0)
-    else:
-        widgets[key].grid(row= i // 2, column=1)
-
-
-frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
-
-
 
 def update():       # Para gestionar Ctrl-c
     ventana.after(50, update)

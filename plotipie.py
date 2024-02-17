@@ -2,13 +2,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import sys 
+import sys
 
 TEST_DIRECTORY = "./resources/consumptions.csv"
 
 
-def ploti_pie(data: str = TEST_DIRECTORY):
-    if len(sys.argv) != 2:
+def ploti_pie(yiar, data: str = TEST_DIRECTORY):
+    if yiar == None:
         print("Usage: plotipie.py year")
         print("Exiting with code -1")
         sys.exit(-1)
@@ -23,7 +23,7 @@ def ploti_pie(data: str = TEST_DIRECTORY):
     #Create column extracting the year
     df['year'] = pd.to_datetime(df['datetime']).dt.year
     #Create column 
-    user_year = int(sys.argv[1])
+    user_year = int(yiar)
     df['month'] = pd.to_datetime(df[df['year']==user_year]['datetime']).dt.month
     #All consume months of the user 
     months_year = df[df['year']==user_year]['month'].unique()
@@ -39,5 +39,5 @@ def ploti_pie(data: str = TEST_DIRECTORY):
     #Consumes for month
     values = list(df['Consumo_KWh'].groupby(df['month']).sum())
     plt.pie(values, labels=[months_dict[key] for key in list(months_dict_filtered)], autopct=lambda p : '{:,.2f}'.format(p * sum(values)/100))
-    plt.show()
-ploti_pie()
+
+    plt.savefig('ploti.png')
