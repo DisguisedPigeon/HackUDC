@@ -85,6 +85,7 @@ def plot_data(data):
     scroll_y.pack(side="right", fill="y")
     
 def get_power(fecha,graph):
+    print(fecha)
     url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
     response = requests.get(url)
     array_precios = np.zeros(24)
