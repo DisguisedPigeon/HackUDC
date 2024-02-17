@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from parser import *
+from parser import get_KWh
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
@@ -27,6 +28,30 @@ def display_tabla_md() -> None:
     if archivo:
         # Si se seleccionó un archivo, intenta abrirlo
         try:
+            contenido2 = get_KWh(archivo)
+
+            eje_y = np.zeros(len(contenido2))
+
+            for entry in contenido2:
+                eje_y[entry] = contenido2[entry]
+
+            fig = Figure(figsize=(5, 5), dpi=100)
+            plot2 = fig.add_subplot(111)
+
+
+            # plotting the graph
+            plot2.clear()
+            plot2.bar(range(len(contenido2)), eje_y)
+
+            # Agregar nombres a los ejes
+            plot2.set_title("Consumo (kWh) en el día")
+            plot2.set_xlabel('Hora del Día')
+            plot2.set_ylabel('Consumo')
+
+            canvas = FigureCanvasTkAgg(fig, master = frame_principal) 
+            canvas.draw() 
+            canvas.get_tk_widget().pack()
+            
             widgets = {}
             widgets["tabla_md"] = tk.Text(frame_bot_derecha)
             contenido = ret_md(archivo)
