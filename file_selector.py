@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
-from parser_1 import *
+from parser import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
@@ -32,7 +32,7 @@ def display_otro(texto: tk.Text):
 
 def abrir_seleccionador(widgets):
     display_tabla_md(widgets["tabla_md"])
-    display_otro(widgets["tabla_md"])
+    display_otro(widgets["otro"])
     
 
 def plot_graph(pcb):
