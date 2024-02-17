@@ -8,18 +8,79 @@ from tkcalendar import Calendar
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import api_data
-import plotipie as PP
-from PIL import Image, ImageTk
-import os
+import sys
 
+TEST_DIRECTORY = "./resources/consumptions.csv"
 
 fig = None
 plot1 = None
 canvas = None
+canvasPie = None
 
 scroll_y = None
 frame = None
+frame2 = None
 table = None
+widgets = {}
+
+def ploti_pie(yiar, data: str = TEST_DIRECTORY):
+    global canvasPie,frame2
+    if frame2 is not None:
+        frame2.destroy()
+    if canvasPie is not None:
+        canvasPie.get_tk_widget().destroy()
+    if yiar == None:
+        print("Usage: plotipie.py year")
+        print("Exiting with code -1")
+        sys.exit(-1)
+    #Load data
+    df = pd.read_csv(data, sep=";")
+    #Create datetime column
+    df['Fecha'] = df['Fecha'].apply(lambda x: pd.Timestamp(x))
+    df['datetime'] = df['Fecha'].astype(str) + ' ' + df['Hora'].astype(str).replace("24", "00") + ':00:00'
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    #Replace in consumo "," for "."
+    df["Consumo_KWh"] = df['Consumo_KWh'].map(lambda x : float(x.replace(",", ".")))
+    #Create column extracting the year
+    df['year'] = pd.to_datetime(df['datetime']).dt.year
+    #Create column 
+    user_year = int(yiar)
+    df['month'] = pd.to_datetime(df[df['year']==user_year]['datetime']).dt.month
+    #All consume months of the user 
+    months_year = df[df['year']==user_year]['month'].unique()
+    months_dict = { 1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 
+                   7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 
+                   12: 'December'}
+    #Keys array
+    a1 = months_dict.keys()
+    #Cast float array to int array
+    a2 = months_year.astype(np.int32)
+    #Extract same values from two arrays (only consume months)
+    months_dict_filtered = np.intersect1d(list(a1),list(a2))
+    #Consumes for month
+    values = list(df['Consumo_KWh'].groupby(df['month']).sum())
+    
+    frame2 = tk.Frame(frame_derecha)
+    frame2.pack(side="bottom", fill="both", expand=True)
+
+    fig = Figure(figsize=(6.5, 5), dpi=100)
+    plot2 = fig.add_subplot(111)
+
+    # plotting the graph
+    plot2.clear()
+    plot2.pie(values, labels=[months_dict[key] for key in list(months_dict_filtered)], autopct=lambda p : '{:,.2f}'.format(p * sum(values)/100))
+    plot2.set_title("Consumo total (KWh) en cada mes para el año: " + str(yiar))
+
+    canvasPie = FigureCanvasTkAgg(fig, master = frame2) 
+    canvasPie.draw() 
+    canvasPie.get_tk_widget().pack_propagate(0)
+    canvasPie.get_tk_widget().pack(fill= "both",expand=0)
+
+def ploted(archivo):
+    if widgets.get("ploti_pie", "Not Found") != "Not Found":
+        widgets["ploti_pie"].destroy()
+    inp = widgets["input_year"].get(1.0, "end-1c")
+    ploti_pie(str(inp), archivo)
 
 def display_tabla_md() -> None:
     archivo = filedialog.askopenfilename(filetypes=[("Facturas de luz", "*.csv"), ("Todos los archivos", "*.*")])
@@ -27,25 +88,22 @@ def display_tabla_md() -> None:
     if archivo:
         # Si se seleccionó un archivo, intenta abrirlo
         try:
-            widgets = {}
-            widgets["tabla_md"] = tk.Text(frame_bot_derecha)
+            widgets["tabla_md"] = tk.Text(frame_bot_derecha, height=15)
             contenido = ret_md(archivo)
             # Limpiar el widget de texto
             widgets["tabla_md"].delete('1.0', tk.END)
             # Insertar el contenido del archivo en el widget de texto
             widgets["tabla_md"].insert(tk.END, contenido)
-            #print(contenido)
-            if os.path.exists('ploti.png') == True:
-                os.remove('ploti.png')
-            #TODO: seleccionar el año
-            PP.ploti_pie("2023", archivo)
-            image = Image.open('ploti.png')
-            canvasPie = ImageTk.PhotoImage(image)
-            widgets["ploti_pie"] = tk.Label(frame_bot_derecha, image=canvasPie)
+            #Seleccionar el año:
+            widgets["input_label"] = tk.Label(frame_bot_derecha, text = "Selecciona el año")
+            widgets["input_year"] = tk.Text(frame_bot_derecha, height=1)
+            widgets["btn"] = tk.Button(frame_bot_derecha, 
+                        text = "Search",  
+                        command = lambda: ploted(archivo)) 
+            #TODO: ponerle título a la gráfica
             for i, key in enumerate(widgets):
                 widgets[key].grid(row= i, column=0)
             frame_bot_derecha.pack(side="bottom", fill="both", expand=True)
-            ventana.mainloop()
 
         except Exception as e:
             # Manejo de errores si no se puede abrir el archivo
@@ -81,7 +139,7 @@ def plot_graph(pcb):
     canvas.draw() 
     canvas.get_tk_widget().pack()
 def plot_data(data):   
-    global frame,table,scroll_y
+    global table,scroll_y
     
     frame = tk.Frame(frame_izquierda)
     frame.pack(fill=tk.BOTH, expand=True)
@@ -158,6 +216,9 @@ frame_izquierda.pack(side="left", fill="y")
 frame_derecha = tk.Frame(frame_principal, bg="lightgreen")
 frame_derecha.pack(side="right", fill="both", expand=True)
 
+
+#frame2.grid_propagate(0)
+
 # Color de fondo para la ventana
 ventana.configure(bg="#f0f0f0")
 
@@ -206,6 +267,7 @@ frame_bot_derecha = tk.Frame(frame_derecha)
 def update():       # Para gestionar Ctrl-c
     ventana.after(50, update)
 ventana.after(50, update)
-
+#while True:
+#    ventana.update_idletasks
 ventana.mainloop()
 
