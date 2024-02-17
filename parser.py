@@ -11,7 +11,7 @@ def parse_data(data: str = TEST_DIRECTORY) -> pd.DataFrame:
     
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d/%m/%Y')
     df['Hora'] = df["Hora"].map(lambda x: 0 if int(x) == 24 else x)
-    df['Hora'] = pd.to_timedelta(df["Hora"], unit='h'))
+    df['Hora'] = pd.to_timedelta(df["Hora"], unit='h')
 
     df['Fecha'] = df['Fecha'] + df['Hora']
 

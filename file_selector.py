@@ -1,15 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-#from parser_1 import *
+from parser import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
 import requests
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2Tk
-from matplotlib.backends._backend_tk import (NavigationToolbar2Tk) 
-from tabulate import tabulate
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 fig = None
 plot1 = None
@@ -102,7 +100,6 @@ def get_power(fecha,graph):
         data = data["PVPC"]
         for line in data:
             # Accede a los valores específicos dentro del objeto JSON
-            dia = line['Dia']
             hora = line['Hora']
             pcb = line['PCB']
             #cym = line['CYM']
@@ -202,7 +199,6 @@ frame_bot_derecha = tk.Frame(frame_derecha)
 
 # Texto mostrando archivo
 widgets["tabla_md"] = tk.Text(frame_bot_derecha, width=120, height=80)
-widgets["otro"] = tk.Text(frame_bot_derecha, width=120, height=80)
 
 
 
