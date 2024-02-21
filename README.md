@@ -14,7 +14,8 @@ Python version:
 3.10.12
 
 Required libraries:
-- tkinter
+- flask
+- pandas
+- requests
+- numpy
 - tabulate
-- tkcalendar
-- Pillow 

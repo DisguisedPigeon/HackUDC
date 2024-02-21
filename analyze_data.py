@@ -1,13 +1,9 @@
 import pandas as pd
-import requests
+import requests as rq
 import numpy as np
-from datetime import datetime
 
-tipo = None
-dfAPI = None
-
-foo1 = "resources/consumptions.csv"
-foo2  = "resources/electrodatos.csv"
+file1 = "resources/consumptions.csv"
+file2 = "resources/electrodatos.csv"
 
 def identificar_formato(archivo):
     global tipo
@@ -23,7 +19,7 @@ def identificar_formato(archivo):
 def get_API(fecha):
     global dfAPI
     url = "https://api.esios.ree.es/archives/70/download_json?date=" + fecha
-    response = requests.get(url)
+    response = rq.get(url)
     array_precios = np.zeros(24)
 
     dfAPI = []
@@ -50,9 +46,5 @@ def leer_csv(archivo):
         df = pd.read_csv(archivo)
     return df
 
-def mayor_consumo(df):
-    print("me voy a pegar un tiro")
-
-df = leer_csv(foo1)
-mayor_consumo(df)
-
+if __name__ == "__main__":
+    df = leer_csv(file1)
